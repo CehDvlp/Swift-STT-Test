@@ -20,7 +20,13 @@ class ViewController: UIViewController, SFSpeechRecognizerDelegate {
         private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
         private var recognitionTask: SFSpeechRecognitionTask?
         private let audioEngine = AVAudioEngine()
+    
+        private let readTxt = ["옛날 옛날 한 옛날에 백두산에 호랑이가 살고있었는데, ",
+                               "어느 날 한 소년이 산에 오르고 있었어요. ",
+                               "그 소년을 본 호랑이는 소년 앞에 나타났어요."]
         
+        var chkTxtCnt = 0
+    
         @IBAction func speechToText(_ sender: Any) {
             if audioEngine.isRunning {
                 audioEngine.stop()
@@ -36,6 +42,52 @@ class ViewController: UIViewController, SFSpeechRecognizerDelegate {
         override func viewDidLoad() {
             super.viewDidLoad()
             speechRecognizer?.delegate = self
+            
+            self.LbText.text = readTxt[chkTxtCnt]
+            
+//            let orgTxt = "옛날 옛날 한 옛날에 백두산!!에 . \n 호랑이가 살고있었어요! 옛날이지만요.."
+//            let arrOrgS = Array(orgTxt)
+//
+//            let chkTxt = self.stringDelSpecialSymbol("옛 날 옛날 한옛날에 백두산에 호랑이가 살고있었어요")
+//
+//            var chkCnt = 0;
+//
+//            for chkS in chkTxt
+//            {
+//                //특수문자는 인덱스만 증가시키고 비교는 X
+//                while(self.stringDelSpecialSymbol(String(arrOrgS[chkCnt])) == "")
+//                {
+//
+//                    chkCnt+=1
+//
+//                    if(chkCnt>=orgTxt.count-1)
+//                    {
+//                        break
+//                    }
+//                }
+//
+//                //문자가 서로 같을경우 인덱스 증가.
+//                if(String(chkS) == String(arrOrgS[chkCnt]))
+//                {
+//                    chkCnt+=1
+//
+//                    //원본글 마지막에서 특수문자가 있을수도 있기떄문에 체크 후 있으면 인덱스 증가.
+//                    while(self.stringDelSpecialSymbol(String(arrOrgS[chkCnt])) == "")
+//                    {
+//                        chkCnt+=1
+//
+//                        if(chkCnt>orgTxt.count-1)
+//                        {
+//                            break
+//                        }
+//                    }
+//
+//                    continue
+//                }
+//
+//            }
+//
+//            print(orgTxt.substring(to:orgTxt.index(orgTxt.startIndex, offsetBy:chkCnt)))
 
         }
         func startRecording() {
@@ -68,25 +120,125 @@ class ViewController: UIViewController, SFSpeechRecognizerDelegate {
                 
                 var isFinal = false
                 
+                var speechTotalTxt = "" // 비교할 총 음성 텍스트
+                var readTotalChkTxt = "" // 비교할 총 스피치할 텍스트?
+                
                 var speechTxt = "" //음성 텍스트
-                var readTxt = ""    //스피치 할 텍스트.
+                var readChkTxt = ""    //스피치 할 텍스트.
                 
                 if result != nil {
                     
-                    speechTxt = self.stringDelSpecialSymbol(result?.bestTranscription.formattedString ?? "")
-                    readTxt = self.stringDelSpecialSymbol(self.LbText.text ?? "")
                     
-                    self.LbSpeech.text = speechTxt
-                    isFinal = (result?.isFinal)!
+                    if(self.chkTxtCnt < self.readTxt.count)
+                    {
+                        speechTotalTxt = self.stringDelSpecialSymbol(result?.bestTranscription.formattedString ?? "")
+                                            
+                        readChkTxt = self.readTxt[self.chkTxtCnt]
+                        
+                        
+                        
+                        //이미 인식한 문장의 경우는 제외하고 비교.
+                        for i in 0..<self.chkTxtCnt {
+                            readTotalChkTxt+=self.stringDelSpecialSymbol(self.readTxt[i])
+                        }
+                        speechTxt = speechTotalTxt.replacingOccurrences(of: readTotalChkTxt, with: "")
+                        
+                        
+                        
+                        
+                        
+                        /* 특수문자를 제거하지 않은 원본문장에서 비교하여 해당 문자열 꺼내오기 */
+                        let orgTxt = readChkTxt
+                        let arrOrgS = Array(orgTxt)
+                        
+                        let chkTxt = self.stringDelSpecialSymbol(speechTxt)
+                        
+                        var chkCnt = 0;
+                        
+                        for chkS in chkTxt
+                        {
+                            //특수문자는 인덱스만 증가시키고 비교는 X
+                            while(self.stringDelSpecialSymbol(String(arrOrgS[chkCnt])) == "")
+                            {
+                                
+                                chkCnt+=1
+                                
+                                if(chkCnt>=orgTxt.count-1)
+                                {
+                                    break
+                                }
+                            }
+                            
+                            //문자가 서로 같을경우 인덱스 증가.
+                            if(String(chkS) == String(arrOrgS[chkCnt]))
+                            {
+                                chkCnt+=1
+                                
+                                //원본글 마지막에서 특수문자가 있을수도 있기떄문에 체크 후 있으면 인덱스 증가.
+                                while(self.stringDelSpecialSymbol(String(arrOrgS[chkCnt])) == "")
+                                {
+                                    chkCnt+=1
+                                    
+                                    if(chkCnt>orgTxt.count-1)
+                                    {
+                                        break
+                                    }
+                                }
+                                
+                                continue
+                            }
+                            
+                        }
+                        
+                        print(orgTxt.substring(to:orgTxt.index(orgTxt.startIndex, offsetBy:chkCnt)))
+                        speechTxt = orgTxt.substring(to:orgTxt.index(orgTxt.startIndex, offsetBy:chkCnt))
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        //self.LbSpeech.text = ""//speechTxt
+                        
+                        
+                        
+                        
+                                                    /* -- 같은 문장의 경우 하이라이트 처리. -- */
+                        
+                        // NSMutableAttributedString Type으로 바꾼 text를 저장
+                        let attributedStr = NSMutableAttributedString(string: readChkTxt)
+
+                        // text의 range 중에서 스피치 한 글자는 UIColor를 blue로 변경
+                        attributedStr.addAttribute(.foregroundColor, value: UIColor.blue, range: (readChkTxt as NSString).range(of: speechTxt))
+                        
+                        // 설정이 적용된 text를 label의 attributedText에 저장
+                        self.LbText.attributedText = attributedStr
+                        
+                        
+                        isFinal = (result?.isFinal)!
+                    }
                     
-                    // NSMutableAttributedString Type으로 바꾼 text를 저장
-                    let attributedStr = NSMutableAttributedString(string: readTxt)
-
-                    // text의 range 중에서 스피치 한 글자는 UIColor를 blue로 변경
-                    attributedStr.addAttribute(.foregroundColor, value: UIColor.blue, range: (readTxt as NSString).range(of: speechTxt))
-
-                    // 설정이 적용된 text를 label의 attributedText에 저장
-                    self.LbText.attributedText = attributedStr
+                    
+                    if((readChkTxt == speechTxt) && self.chkTxtCnt <= self.readTxt.count)
+                    {
+                        
+                        
+                        
+                        if(self.chkTxtCnt >= self.readTxt.count)
+                        {
+                            isFinal = true
+                            
+                            self.audioEngine.stop()
+                            self.recognitionRequest?.endAudio()
+                            self.BtnSpeech.isEnabled = false
+                            self.BtnSpeech.setTitle("Start", for: .normal)
+                            
+                        }else {
+                            self.chkTxtCnt+=1
+                            speechTxt = ""
+                        }
+                    }
                     
                 }
                 
